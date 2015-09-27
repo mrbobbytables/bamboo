@@ -1,0 +1,26 @@
+{
+  "Marathon": {
+    "Endpoint": "http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080"
+  },
+
+  "Bamboo": {
+    "Endpoint": "http://10.10.0.21:8000",
+    "Zookeeper": {
+      "Host": "10.10.0.11:2181,10.10.0.12:2181,10.10.0.13:2181",
+      "Path": "/marathon-haproxy/state",
+      "ReportingDelay": 5
+    }
+  },
+
+  "HAProxy": {
+    "TemplatePath": "/opt/bamboo/config/haproxy.tmplt",
+    "OutputPath": "/etc/haproxy/haproxy.cfg",
+    "ReloadCommand": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+  },
+
+  "StatsD": {
+    "Enabled": false,
+    "Host": "localhost:8125",
+    "Prefix": "bamboo-server.development."
+  }
+}

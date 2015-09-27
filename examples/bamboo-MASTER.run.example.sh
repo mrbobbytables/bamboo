@@ -1,0 +1,22 @@
+docker run -d --net=host --cap-add NET_ADMIN \
+-e ENVIRONMENT=production \
+-e PARENT_HOST=$(hostname) \
+-e BAMBOO_BIND_ADDRESS="10.10.0.2:8000" \
+-e BAMBOO_ENDPOINT="http://10.10.0.21:8000" \
+-e BAMBOO_ZK_HOST="10.10.0.11:2181,10.10.0.12:2181,10.10.0.13:2181" \
+-e BAMBOO_ZK_PATH="/marathon-haproxy/state"
+-e MARATHON_ENDPOINT="http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080" \
+-e HAPROXY_TEMPLATE_PATH="/opt/bamboo/config/haproxy.tmplt" \
+-e HAPROXY_OUTPUT_PATH="/etc/haproxy/haproxy.cfg" \
+-e HAPROXY_RELOAD_CMD="iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+-e STATSD_ENABLED="false" \
+-e KEEPALIVED_STATE=MASTER \
+-e KEEPALIVED_INTERFACE=eth0 \
+-e KEEPALIVED_VIRTUAL_ROUTER_ID=1 \
+-e KEEPALIVED_VRRP_UNICAST_BIND="10.10.0.21" \
+-e KEEPALIVED_VRRP_UNICAST_PEER="10.10.0.22" \
+-e KEEPALIVED_TRACK_INTERFACE_1=eth0 \
+-e KEEPALIVED_TRACK_INTERFACE_2=eth1 \
+-e KEEPALIVED_VIRTUAL_IPADDRESS_1="10.10.0.2/24 dev eth0" \
+-e KEEPALIVED_VIRTUAL_IPADDRESS_EXCLUDED_1="172.16.1.10/24 dev eth1" \
+bamboo
