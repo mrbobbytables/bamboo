@@ -61,9 +61,9 @@ The host(s) that this is intended to run on must have a kernel setting configure
 
 
 ##### Bamboo  HAproxy Template
-While the Bamboo container can be used without modifying the HAproxy configuartion for testing purposes; in a production environment the HAProxy template should be tailored to your applications. The path to the template can either be specified in the Bamboo config (`/opt/bamboo/config/production.json`) or overriden with environment variable `HAPROXY_TEMPLATE_PATH`.
+While the Bamboo container can be used without modifying the HAproxy configuration for testing purposes; in a production environment the HAProxy template should be tailored to your applications. The path to the template can either be specified in the Bamboo config (`/opt/bamboo/config/production.json`) or overridden with environment variable `HAPROXY_TEMPLATE_PATH`.
 
-Bamboo uses Go's own text templating package with their own verbage. The example [haproxy template](https://github.com/QubitProducts/bamboo/blob/master/config/haproxy_template.cfg) in their [github repo](https://github.com/QubitProducts/bamboo) serves as a good reference. For further HAproxy configuration information, please see the [HAproxy Configuration Manual](https://cbonte.github.io/haproxy-dconv/index.html).
+Bamboo uses Go's own text templating package with their own verbiage. The example [haproxy template](https://github.com/QubitProducts/bamboo/blob/master/config/haproxy_template.cfg) in their [github repo](https://github.com/QubitProducts/bamboo) serves as a good reference. For further HAproxy configuration information, please see the [HAproxy Configuration Manual](https://cbonte.github.io/haproxy-dconv/index.html).
 
 
 ---
@@ -336,10 +336,10 @@ bamboo
 ### Modification and Anatomy of the Project
 
 **File Structure**
-The directory `skel` in the project root maps to the root of the filesystem once the container is built. Files and folders placed there will map to their corrisponding location within the container.
+The directory `skel` in the project root maps to the root of the file system once the container is built. Files and folders placed there will map to their corresponding location within the container.
 
 **Init**
-The init script (`./init.sh`) found at the root of the directory is the entry process for the container. It's role is to simply set specific environment variables and modify any subsiquently required configuration files.
+The init script (`./init.sh`) found at the root of the directory is the entry process for the container. It's role is to simply set specific environment variables and modify any subsequently required configuration files.
 
 **Supervisord**
 All supervisord configs can be found in `/etc/supervisor/conf.d/`. Services by default will redirect their stdout to `/dev/fd/1` and stderr to `/dev/fd/2` allowing for service's console output to be displayed. Most applications can log to both stdout and their respecively specified log file.
@@ -511,7 +511,7 @@ HAproxy is a small and high performant tcp/http based load balancer. In the Bamb
 ### Rsyslog
 Rsyslog is a high performance log processing daemon. 
 
-Both HAproxy and Keepalved's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
+Both HAproxy and Keepalived's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
 
 ##### Defaults
 
@@ -533,7 +533,7 @@ Both HAproxy and Keepalved's logging capability are dependant on the rsyslog ser
 
 ### Keepalived
 
-A battle-tested daemon built to handle load balancing and failover. If `KEEPALIVED_AUTOCONF` is enabed, it will autogenerate a unicaist based failover configuration with a minimal amount of user supplied information. For specific information on Keepalived, please see the man page on [keepalived.conf](http://linux.die.net    /man/5/keepalived.conf) or the [Keepalived User Guide](http://www.keepalived.org/pdf/UserGuide.pdf).
+A battle-tested daemon built to handle load balancing and failover. If `KEEPALIVED_AUTOCONF` is enabled, it will auto generate a unicast based failover configuration with a minimal amount of user supplied information. For specific information on Keepalived, please see the man page on [keepalived.conf](http://linux.die.net    /man/5/keepalived.conf) or the [Keepalived User Guide](http://www.keepalived.org/pdf/UserGuide.pdf).
 
 #### Keepalived Autoconfiguration Options
 
@@ -564,7 +564,7 @@ A battle-tested daemon built to handle load balancing and failover. If `KEEPALIV
 
 * `KEEPALIVED_INTERFACE` - The host interface that keepalived will monitor and use for VRRP traffic.
 
-* `KEEPALIVED_VIRTUAL_ROUTER_ID` - A unique number from 0 to 255 that should identifiy the VRRP group. Master and Backup should have the same value. Multiple instances of keepalived can be run on the same host, but each pair **MUST** have a unique virtual router id.
+* `KEEPALIVED_VIRTUAL_ROUTER_ID` - A unique number from 0 to 255 that should identify the VRRP group. Master and Backup should have the same value. Multiple instances of keepalived can be run on the same host, but each pair **MUST** have a unique virtual router id.
 
 * `KEEPALIVED_ADVERT_INT` - The VRRP advertisement interval (in seconds).
 
@@ -702,7 +702,7 @@ Redpill - Supervisor status monitor. Terminates the supervisor process if any sp
 
 -c | --cleanup    Optional path to cleanup script that should be executed upon exit.
 -h | --help       This help text.
--i | --inerval    Optional interval at which the service check is performed in seconds. (Default: 30)
+-i | --interval   Optional interval at which the service check is performed in seconds. (Default: 30)
 -s | --service    A comma delimited list of the supervisor service names that should be monitored.
 ```
 
@@ -714,6 +714,8 @@ Redpill - Supervisor status monitor. Terminates the supervisor process if any sp
 In the event of an issue, the `ENVIRONMENT` variable can be set to `debug`.  This will stop the container from shipping logs and prevent it from terminating if one of the services enters a failed state.
 
 In addition to disabling Logstash-Forwarder, and Redpill the supervisor config for HAproxy will be modified to route logs to the console.
+
+
 
 
 
