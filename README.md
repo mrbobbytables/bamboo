@@ -5,9 +5,9 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 
 ##### Version Information:
 
-* **Container Release:** 1.0.0
+* **Container Release:** 1.0.1
 * **Bamboo:** v0.2.14
-* **HAproxy:** 1.5.14-1ppa~trusty
+* **HAproxy:** 1.5.15-1ppa1~trusty
 * **Keepalived:** 1:1.2.7-1ubuntu1
 
 ##### Services Include

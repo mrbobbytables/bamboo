@@ -1,8 +1,8 @@
 ################################################################################
-# bamboo:1.0.0
-# Date: 9/27/2015
+# bamboo:1.0.1
+# Date: 11/07/2015
 # Bamboo Version: v0.2.14
-# HAproxy Version: 1.5.14-1ppa~trusty
+# HAproxy Version: 1.5.15-1ppa~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
 #
 # Description:
@@ -14,8 +14,8 @@ FROM mrbobbytables/ubuntu-base:1.0.0
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
-ENV VERSION_BAMBOO=v0.2.14              \
-    VERSION_HAPROXY=1.5.14-1ppa~trusty  \
+ENV VERSION_BAMBOO=v0.2.14               \
+    VERSION_HAPROXY=1.5.15-1ppa1~trusty  \
     VERSION_KEEPALIVED=1:1.2.7-1ubuntu1
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD                                                         \
