@@ -1,6 +1,6 @@
 ################################################################################
-# bamboo:1.0.1
-# Date: 11/07/2015
+# bamboo:1.0.2
+# Date: 11/10/2015
 # Bamboo Version: v0.2.14
 # HAproxy Version: 1.5.15-1ppa~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
@@ -10,7 +10,7 @@
 # keepalived for additional high availability.
 ################################################################################
 
-FROM mrbobbytables/ubuntu-base:1.0.0
+FROM mrbobbytables/ubuntu-base:1.0.1
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
@@ -35,6 +35,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
     ruby                            \
     ruby-dev                        \
     wget                            \
+    vim  \
  && gem install fpm                 \
  && wget -P /tmp https://storage.googleapis.com/golang/go1.4.2.linux-amd64.tar.gz    \
  && tar -xvzf /tmp/go1.4.2.linux-amd64.tar.gz -C /opt/                               \
@@ -56,12 +57,15 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && rm -r /var/lib/gems                  \
  && rm -r /opt/go                        \
  && rm /etc/rsyslog.d/50-default.conf    \
+ && rm /etc/logrotate.d/*                \
  && rm -r /tmp/*
 
 COPY ./skel /
 
-RUN chmod +x init.sh    \
- && touch /var/run/haproxy.stat     \
+RUN chmod +x init.sh              \
+ && chmod 640 /etc/logrotate.d/*  \
+ && touch /var/run/haproxy.stat   \
+ && mkdir -p /var/log/bamboo      \ 
  && chown -R logstash-forwarder:logstash-forwarder /opt/logstash-forwarder
 
 
