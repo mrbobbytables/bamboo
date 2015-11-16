@@ -1,5 +1,6 @@
 docker run -d --net=host --cap-add NET_ADMIN \
 -e ENVIRONMENT=production \
+-e ENVIRONMENT_INIT=/opt/scripts/delete-iptb-rules.sh \
 -e PARENT_HOST=$(hostname) \
 -e BAMBOO_BIND_ADDRESS="10.10.0.2:8000" \
 -e BAMBOO_ENDPOINT="http://10.10.0.21:8000" \

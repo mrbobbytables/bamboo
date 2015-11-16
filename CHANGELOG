@@ -1,2 +1,7 @@
+2015-11-16 - 1.0.2:
+ - Bump Bamboo release to 0.2.15
+ - Add logrotate support
+ - Add iptables clean up script
+
 2015-11-07 - 1.0.1:
  - Bump HAproxy to version 1.5.15-1ppa1~trusty

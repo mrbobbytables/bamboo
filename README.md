@@ -5,8 +5,8 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 
 ##### Version Information:
 
-* **Container Release:** 1.0.1
-* **Bamboo:** v0.2.14
+* **Container Release:** 1.0.2
+* **Bamboo:** v0.2.15
 * **HAproxy:** 1.5.15-1ppa1~trusty
 * **Keepalived:** 1:1.2.7-1ubuntu1
 
@@ -15,6 +15,7 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 * **[HApoxy](#haproxy)** - The well known and high performance tcp/http load balancer.
 * **[Rsyslog](#rsyslog)** - A system logging daemon. Bundled to support logging for HAproxy and Keepalived.
 * **[Keepalived](#keepalived)** - A well known and frequently used framework that provides load-balancing and fault tolerance via VRRP (Virtual Router Redundancy Protocol).
+* **[Logrotate](#logrotate)** - A script and application that aid in pruning log files.
 * **[Logstash-Forwarder](#logstash-forwarder)** - A lightweight log collector and shipper for use with [Logstash](https://www.elastic.co/products/logstash).
 * **[Redpill](#redpill)** - A bash script and healthcheck for supervisord managed services. It is capable of running cleanup scripts that should be executed upon container termination.
 
@@ -33,6 +34,7 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
  * [Bamboo](#bamboo)
  * [HAproxy](#haproxy)
  * [Keepalived](#keepalived)
+ * [Logrotate](#logrotate)
  * [Logstash-Forwarder](#logstash-forwarder)
  * [Redpill](#redpill)
 * [Troubleshooting](#troubleshooting)
@@ -160,6 +162,7 @@ For more information on the available commands, see either the [Bamboo service s
 ```
 docker run -d --net=host --cap-add NET_ADMIN \
 -e ENVIRONMENT=production \
+-e ENVIRONMENT_INIT=/opt/scripts/delete-iptb-rules.sh \
 -e PARENT_HOST=$(hostname) \
 -e BAMBOO_BIND_ADDRESS="10.10.0.2:8000" \
 -e BAMBOO_ENDPOINT="http://10.10.0.21:8000" \
@@ -186,6 +189,7 @@ bamboo
 ```
 docker run -d --net=host --cap-add NET_ADMIN  \
 -e ENVIRONMENT=production \
+-e ENVIRONMENT_INIT=/opt/scripts/delete-iptb-rules.sh \
 -e PARENT_HOST=$(hostname) \
 -e BAMBOO_BIND_ADDRESS="10.10.0.2:8000" \
 -e BAMBOO_ENDPOINT="http://10.10.0.2:8000" \
@@ -241,6 +245,7 @@ bamboo
     },
     "env": {
         "ENVIRONMENT": "production",
+        "ENVIRONMENT_INIT": "/opt/scripts/delete-iptb-rules.sh",
         "APP_NAME": "bamboo",
         "PARENT_HOST": "mesos-proxy-01",
         "BAMBOO_BIND_ADDRESS": "10.10.0.2:8000",
@@ -297,6 +302,7 @@ bamboo
     },
     "env": {
         "ENVIRONMENT": "production",
+        "ENVIRONMENT_INIT": "/opt/scripts/delete-iptb-rules.sh",
         "APP_NAME": "bamboo",
         "PARENT_HOST": "mesos-proxy-02",
         "BAMBOO_BIND_ADDRESS": "10.10.0.2:8000",
@@ -635,6 +641,62 @@ vrrp_instance MAIN {
 }
 
 ```
+
+
+---
+
+### Logrotate
+
+The logrotate script is a small simple script that will either call and execute logrotate on a given interval; or execute a supplied script. This is useful for applications that do not perform their own log cleanup.
+
+#### Logrotate Environment Variables
+
+##### Defaults
+
+| **Variable**                 | **Default**                           |
+|------------------------------|---------------------------------------|
+| `SERVICE_LOGROTATE`          |                                       |
+| `SERVICE_LOGROTATE_INTERVAL` | `3600` (set in script)                |
+| `SERVICE_LOGROTATE_CONFIG`   | `/etc/logrotate.conf` (set in script) |
+| `SERVICE_LOGROTATE_SCRIPT`   |                                       |
+| `SERVICE_LOGROTATE_FORCE`    |                                       |
+| `SERVICE_LOGROTATE_VERBOSE`  |                                       |
+| `SERVICE_LOGROTATE_DEBUG`    |                                       |
+| `SERVICE_LOGROTATE_CMD`      | `/opt/script/logrotate.sh <flags>`    |
+
+##### Description
+
+* `SERVICE_LOGROTATE` - Enables or disables the Logrotate service. Set automatically depending on the `ENVIRONMENT`. See the Environment section.  (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_LOGROTATE_INTERVAL` - The time in seconds between run of either the logrotate command or the provided logrotate script. Default is set to `3600` or 1 hour in the script itself.
+
+* `SERVICE_LOGROTATE_CONFIG` - The path to the logrotate config file. If neither config or script is provided, it will default to `/etc/logrotate.conf`.
+
+* `SERVICE_LOGROTATE_SCRIPT` - A script that should be executed on the provided interval. Useful to do cleanup of logs for applications that already handle rotation, or if additional processing is required.
+
+* `SERVICE_LOGROTATE_FORCE` - If present, passes the 'force' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_VERBOSE` - If present, passes the 'verbose' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_DEBUG` - If present, passed the 'debug' command to logrotate. Will be ignored if a script is provided.
+
+* `SERVICE_LOGROTATE_CMD` - The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
+
+##### Logrotate Script Help Text
+```
+root@ec58ca7459cb:/opt/scripts# ./logrotate.sh --help
+logrotate.sh - Small wrapper script for logrotate.
+-i | --interval     The interval in seconds that logrotate should run.
+-c | --config       Path to the logrotate config.
+-s | --script       A script to be executed in place of logrotate.
+-f | --force        Forces log rotation.
+-v | --verbose      Display verbose output.
+-d | --debug        Enable debugging, and implies verbose output. No state file changes.
+-h | --help         This usage text.
+```
+
+
 ---
 
 ### Logstash-Forwarder
