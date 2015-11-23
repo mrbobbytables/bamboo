@@ -13,8 +13,8 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 ##### Services Include
 * **[Bamboo](#bamboo)** - A service-discovery and routing daemon that subscribes to Marathon events.
 * **[HApoxy](#haproxy)** - The well known and high performance tcp/http load balancer.
-* **[Rsyslog](#rsyslog)** - A system logging daemon. Bundled to support logging for HAproxy and Keepalived.
 * **[Keepalived](#keepalived)** - A well known and frequently used framework that provides load-balancing and fault tolerance via VRRP (Virtual Router Redundancy Protocol).
+* **[Rsyslog](#rsyslog)** - A system logging daemon. Bundled to support logging for HAproxy and Keepalived.
 * **[Logrotate](#logrotate)** - A script and application that aid in pruning log files.
 * **[Logstash-Forwarder](#logstash-forwarder)** - A lightweight log collector and shipper for use with [Logstash](https://www.elastic.co/products/logstash).
 * **[Redpill](#redpill)** - A bash script and healthcheck for supervisord managed services. It is capable of running cleanup scripts that should be executed upon container termination.
@@ -28,12 +28,14 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
  * [Before you Build or Run](#read-this-before-you-attempt-to-run-or-build)
  * [Example Run Command](#example-run-command)
  * [Example Marathon App Definition](#example-marathon-app-definition)
+ * [Example ENVIRONMENT_INIT Script](#example-environment_init-script)
 * [Modification and Anatomy of the Project](#modification-and-anatomy-of-the-project)
 * [Important Environment Variables](#important-environment-variables)
 * [Service Configuration](#service-configuration)
  * [Bamboo](#bamboo)
  * [HAproxy](#haproxy)
  * [Keepalived](#keepalived)
+ * [Rsyslog](#rsyslog)
  * [Logrotate](#logrotate)
  * [Logstash-Forwarder](#logstash-forwarder)
  * [Redpill](#redpill)
@@ -76,13 +78,15 @@ For a production deployment with Keepalived enabled; there are close to 20 envir
 
 In addition to modifying the haproxy template, the only other important note is in reference to the reload command used to update the HAproxy's config. With HAproxy being managed by supervisord, and not running as a native service - it is best to be reloaded using `supervisorctl`. Below is an example reload command:
 
-`iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done`
+`iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done`
 
-The above command will drop the `SYN` packet before the HAproxy process restarts forcing the clients to resend it to the new process. This will increase latency when HAproxy is reloaded; however it will not drop any packets. For more information on this technique and several others, [Yelp's Engineering Blog](http://engineeringblog.yelp.com/) has a useful [article](http://engineeringblog.yelp.com/2015/04/true-zero-downtime-haproxy-reloads.html) on the subject.
+The above command will drop the `SYN` packet before the HAproxy process restarts forcing the clients to resend it to the new process. This will increase latency when HAproxy is reloaded; however it will not drop any packets. The reasoning for executing the `iptables -D` rule command initially is to account for possible instances where bamboo may have crashed stranding a rule in the iptables rule list. This ensures a clean-state before dropping the `SYN` packets. **Note:** This will trigger log entries for `iptables: Bad rule (does a matching rule exist in that chain?)`. When no rule is found (good) and can be ignored. For more information on this technique and several others, [Yelp's Engineering Blog](http://engineeringblog.yelp.com/) has a useful [article](http://engineeringblog.yelp.com/2015/04/true-zero-downtime-haproxy-reloads.html) on the subject.
 
 If using Keepalived or iptables for the reload command, both require host networking and the `NET_ADMIN` capability should be used for the container to work correctly.
 
 **Configuration Parameters**
+
+* `ENVIRONMENT_INIT` - If set, and the file path is valid. This will be sourced and executed before **ANYTHING** else. Useful if supplying an environment file or need to query a service such as consul to populate other variables. The included example performs the same iptables clean up command referenced above.
 
 * `ENVIRONMENT` - Sets defaults for several other variables based on the current running environment. Please see the [environment](#environment) section for further information. If logstash-forwarder is enabled, this value will populate the `environment` field in the logstash-forwarder configuration file.
 
@@ -143,7 +147,7 @@ For more information on the available commands, see either the [Bamboo service s
   "HAProxy": {
     "TemplatePath": "/opt/bamboo/config/haproxy.tmplt",
     "OutputPath": "/etc/haproxy/haproxy.cfg",
-    "ReloadCommand": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+    "ReloadCommand": "iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
   },
 
   "StatsD": {
@@ -171,7 +175,7 @@ docker run -d --net=host --cap-add NET_ADMIN \
 -e MARATHON_ENDPOINT="http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080" \
 -e HAPROXY_TEMPLATE_PATH="/opt/bamboo/config/haproxy.tmplt" \
 -e HAPROXY_OUTPUT_PATH="/etc/haproxy/haproxy.cfg" \
--e HAPROXY_RELOAD_CMD="iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+-e HAPROXY_RELOAD_CMD="iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
 -e STATSD_ENABLED="false" \
 -e KEEPALIVED_STATE=MASTER \
 -e KEEPALIVED_INTERFACE=eth0 \
@@ -198,7 +202,7 @@ docker run -d --net=host --cap-add NET_ADMIN  \
 -e MARATHON_ENDPOINT="http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080" \
 -e HAPROXY_TEMPLATE_PATH="/opt/bamboo/config/haproxy.tmplt" \
 -e HAPROXY_OUTPUT_PATH="/etc/haproxy/haproxy.cfg" \
--e HAPROXY_RELOAD_CMD="iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+-e HAPROXY_RELOAD_CMD="iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
 -e STATSD_ENABLED="false" \
 -e KEEPALIVED_STATE=BACKUP \
 -e KEEPALIVED_INTERFACE=eth0 \
@@ -255,7 +259,7 @@ bamboo
         "MARATHON_ENDPOINT": "http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080",
         "HAPROXY_TEMPLATE_PATH": "/opt/bamboo/config/haproxy.tmplt",
         "HAPROXY_OUTPUT_PATH": "/etc/haproxy/haproxy.cfg",
-        "HAPROXY_RELOAD_CMD": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
+        "HAPROXY_RELOAD_CMD": "iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
         "STATSD_ENABLED": "false",
         "KEEPALIVED_STATE": "MASTER",
         "KEEPALIVED_INTERFACE": "eth0",
@@ -312,7 +316,7 @@ bamboo
         "MARATHON_ENDPOINT": "http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080",
         "HAPROXY_TEMPLATE_PATH": "/opt/bamboo/config/haproxy.tmplt",
         "HAPROXY_OUTPUT_PATH": "/etc/haproxy/haproxy.cfg",
-        "HAPROXY_RELOAD_CMD": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
+        "HAPROXY_RELOAD_CMD": "iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
         "STATSD_ENABLED": "false",
         "KEEPALIVED_STATE": "BACKUP",
         "KEEPALIVED_INTERFACE": "eth0",
@@ -331,8 +335,15 @@ bamboo
 ```
 
 
-
 * **Note:** The example assumes a v1.6+ version of docker or a v2 version of the docker registry. For information on using an older version or connecting to a v1 registry, please see the [private registry](https://mesosphere.github.io/marathon/docs/native-docker-private-registry.html) section of the Marathon documentation.
+
+##### Example ENVIRONMENT_INIT script
+```
+#!/bin/bash
+#cleanup in case container was killed while updating
+iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP
+
+```
 
 
 ---
@@ -348,7 +359,7 @@ The directory `skel` in the project root maps to the root of the file system onc
 The init script (`./init.sh`) found at the root of the directory is the entry process for the container. It's role is to simply set specific environment variables and modify any subsequently required configuration files.
 
 **Supervisord**
-All supervisord configs can be found in `/etc/supervisor/conf.d/`. Services by default will redirect their stdout to `/dev/fd/1` and stderr to `/dev/fd/2` allowing for service's console output to be displayed. Most applications can log to both stdout and their respecively specified log file.
+All supervisord configs can be found in `/etc/supervisor/conf.d/`. Services by default will redirect their stdout to `/dev/fd/1` and stderr to `/dev/fd/2` allowing for service's console output to be displayed. Most applications can log to both stdout and their respectively specified log file.
 
 In some cases (such as with zookeeper), it is possible to specify different logging levels and formats for each location.
 
@@ -374,7 +385,7 @@ Below is the minimum list of variables to be aware of when deploying the Bamboo 
 
 | **Variable**                      | **Default**                           |
 |-----------------------------------|---------------------------------------|
-| `ENVIRONMENT_INIT`                |                                       |
+| `ENVIRONMENT_INIT`                | `/opt/scripts/delete-iptb-rules.sh`   |
 | `APP_NAME`                        | `bamboo`                              |
 | `ENVIRONMENT`                     | `local`                               |
 | `PARENT_HOST`                     | `unknown`                             |
@@ -514,28 +525,6 @@ HAproxy is a small and high performant tcp/http based load balancer. In the Bamb
 
 ---
 
-### Rsyslog
-Rsyslog is a high performance log processing daemon. 
-
-Both HAproxy and Keepalived's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
-
-##### Defaults
-
-| **Variable**                      | **Default**                                      |
-|-----------------------------------|--------------------------------------------------|
-| `SERVICE_RSYSLOG`                 | `enabled`                                        |
-| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                              |
-| `SERVICE_RSYSLOG_CMD`             | `/usr/sbin/rsyslogd -n -f $SERVICE_RSYSLOG_CONF` |
-
-##### Description
-
-* `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
-
-* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
-
-* `SERVICE_RSYSLOG_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
-
----
 
 ### Keepalived
 
@@ -645,6 +634,31 @@ vrrp_instance MAIN {
 
 ---
 
+
+### Rsyslog
+Rsyslog is a high performance log processing daemon. 
+
+Both HAproxy and Keepalived's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
+
+##### Defaults
+
+| **Variable**                      | **Default**                                      |
+|-----------------------------------|--------------------------------------------------|
+| `SERVICE_RSYSLOG`                 | `enabled`                                        |
+| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                              |
+| `SERVICE_RSYSLOG_CMD`             | `/usr/sbin/rsyslogd -n -f $SERVICE_RSYSLOG_CONF` |
+
+##### Description
+
+* `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
+
+* `SERVICE_RSYSLOG_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
+---
+
+
 ### Logrotate
 
 The logrotate script is a small simple script that will either call and execute logrotate on a given interval; or execute a supplied script. This is useful for applications that do not perform their own log cleanup.
@@ -711,7 +725,7 @@ Logstash-Forwarder is a lightweight application that collects and forwards logs 
 | **Variable**                         | **Default**                                                                             |
 |--------------------------------------|-----------------------------------------------------------------------------------------|
 | `SERVICE_LOGSTASH_FORWARDER`         |                                                                                         |
-| `SERVICE_LOGSTASH_FORWARDER_CONF`    | `/opt/logstash-forwarer/bamboo.conf`                                                    |
+| `SERVICE_LOGSTASH_FORWARDER_CONF`    | `/opt/logstash-forwarder/bamboo.conf`                                                   |
 | `SERVICE_LOGSTASH_FORWARDER_ADDRESS` |                                                                                         |
 | `SERVICE_LOGSTASH_FORWARDER_CERT`    |                                                                                         |
 | `SERVICE_LOGSTASH_FORWARDER_CMD`     | `/opt/logstash-forwarder/logstash-forwarder -config=”$SERVICE_LOGSTASH_FORWARDER_CONF”` |

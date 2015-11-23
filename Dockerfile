@@ -1,6 +1,6 @@
 ################################################################################
 # bamboo:1.0.2
-# Date: 11/16/2015
+# Date: 11/23/2015
 # Bamboo Version: v0.2.15
 # HAproxy Version: 1.5.15-1ppa~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
@@ -35,7 +35,6 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
     ruby                            \
     ruby-dev                        \
     wget                            \
-    vim  \
  && gem install fpm                 \
  && wget -P /tmp https://storage.googleapis.com/golang/go1.4.2.linux-amd64.tar.gz    \
  && tar -xvzf /tmp/go1.4.2.linux-amd64.tar.gz -C /opt/                               \
