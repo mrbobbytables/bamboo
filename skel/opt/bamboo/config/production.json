@@ -15,7 +15,7 @@
   "HAProxy": {
     "TemplatePath": "/opt/bamboo/config/haproxy.tmplt",
     "OutputPath": "/etc/haproxy/haproxy.cfg",
-    "ReloadCommand": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
+    "ReloadCommand": "iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done"
   },
 
   "StatsD": {

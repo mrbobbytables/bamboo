@@ -17,6 +17,7 @@ init_vars() {
   export PARENT_HOST=${PARENT_HOST:-unknown}
 
   export BAMBOO_BIND_ADDRESS=${BAMBOO_BIND_ADDRESS:-0.0.0.0:8000}
+  export BAMBOO_LOG_FILE=${BAMBOO_LOG_FILE:-/var/log/bamboo/bamboo.log}
   export BAMBOO_CONF=${BAMBOO_CONF:-/opt/bamboo/config/production.json}
   export HAPROXY_OUTPUT_PATH=${HAPROXY_OUTPUT_PATH:-/etc/haproxy/haproxy.cfg}
   
@@ -26,12 +27,14 @@ init_vars() {
   export SERVICE_REDPILL_MONITOR=${SERVICE_REDPILL_MONITOR:-"bamboo,haproxy,keepalived"}
   export SERVICE_RSYSLOG=${SERVICE_RSYSLOG:-enabled}
 
-  bamboo_cmd="$(__escape_svsr_txt "/opt/bamboo/bamboo -bind=$BAMBOO_BIND_ADDRESS -config=$BAMBOO_CONF")"
+  bamboo_cmd="$(__escape_svsr_txt "/opt/bamboo/bamboo -bind=$BAMBOO_BIND_ADDRESS -config=$BAMBOO_CONF -log=$BAMBOO_LOG_FILE")"
   export SERVICE_BAMBOO_CMD=${SERVICE_BAMBOO_CMD:-"$bamboo_cmd"}
 
   case "${ENVIRONMENT,,}" in
     prod|production|dev|development)
       export SERVICE_KEEPALIVED=${SERVICE_KEEPALIVED:-enabled}
+      export SERVICE_LOGROTATE=${SERVICE_LOGROTATE:-enabled}
+      export SERVICE_LOGROTATE_CONFIG=${SERVICE_LOGROTATE_CONFIG:-/etc/logrotate.conf}
       export SERVICE_LOGSTASH_FORWARDER=${SERVICE_LOGSTASH_FORWARDER:-enabled}
       export SERVICE_REDPILL=${SERVICE_REDPILL:-enabled}
       export SERVICE_HAPROXY_CMD=${SERVICE_HAPROXY_CMD:-"/usr/sbin/haproxy -d -f $HAPROXY_OUTPUT_PATH"}
@@ -39,6 +42,7 @@ init_vars() {
       ;;
     debug)
       export SERVICE_KEEPALIVED=${SERVICE_KEEPALIVED:-enabled}
+      export SERVICE_LOGROTATE=${SERVICE_LOGROTATE:-disabled}
       export SERVICE_LOGSTASH_FORWARDER=${SERVICE_LOGSTASH_FORWARDER:-disabled}
       export SERVICE_REDPILL=${SERVICE_REDPILL:-disabled}
       export SERVICE_HAPROXY_CMD=${SERVICE_HAPROXY_CMD:-"/usr/sbin/haproxy -db -f $HAPROXY_OUTPUT_PATH"}
@@ -48,6 +52,8 @@ init_vars() {
       ;;
     local|*)
       export SERVICE_KEEPALIVED=${SERVICE_KEEPALIVED:-disabled}
+      export SERVICE_LOGROTATE=${SERVICE_LOGROTATE:-enabled}
+      export SERVICE_LOGROTATE_CONFIG=${SERVICE_LOGROTATE_CONFIG:-/etc/logrotate.conf}
       export SERVICE_LOGSTASH_FORWARDER=${SERVICE_LOGSTASH_FORWARDER:-disabled}
       export SERVICE_REDPILL=${SERVICE_REDPILL:-enabled}
       export SERVICE_HAPROXY_CMD=${SERVICE_HAPROXY_CMD:-"/usr/sbin/haproxy -d -f $HAPROXY_OUTPUT_PATH"}
@@ -64,6 +70,7 @@ main() {
   echo "[$(date)][Environment] $ENVIRONMENT"
 
   __config_service_keepalived
+  __config_service_logrotate
   __config_service_logstash_forwarder
   __config_service_redpill
   __config_service_rsyslog

@@ -25,6 +25,7 @@
     },
     "env": {
         "ENVIRONMENT": "production",
+        "ENVIRONMENT_INIT": "/opt/scripts/delete-iptb-rules.sh",
         "APP_NAME": "bamboo",
         "PARENT_HOST": "mesos-proxy-02",
         "BAMBOO_BIND_ADDRESS": "10.10.0.2:8000",
@@ -34,7 +35,7 @@
         "MARATHON_ENDPOINT": "http://10.10.0.11:8080,http://10.10.0.12:8080,http://10.10.0.13:8080",
         "HAPROXY_TEMPLATE_PATH": "/opt/bamboo/config/haproxy.tmplt",
         "HAPROXY_OUTPUT_PATH": "/etc/haproxy/haproxy.cfg",
-        "HAPROXY_RELOAD_CMD": "iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
+        "HAPROXY_RELOAD_CMD": "iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; iptables -I INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; sleep 0.2; supervisorctl restart haproxy; iptables -D INPUT -p tcp -m multiport --dports 80,443 --syn -j DROP; done",
         "STATSD_ENABLED": "false",
         "KEEPALIVED_STATE": "BACKUP",
         "KEEPALIVED_INTERFACE": "eth0",

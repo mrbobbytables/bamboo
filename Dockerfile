@@ -1,7 +1,7 @@
 ################################################################################
-# bamboo:1.0.1
-# Date: 11/07/2015
-# Bamboo Version: v0.2.14
+# bamboo:1.0.2
+# Date: 11/23/2015
+# Bamboo Version: v0.2.15
 # HAproxy Version: 1.5.15-1ppa~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
 #
@@ -10,11 +10,11 @@
 # keepalived for additional high availability.
 ################################################################################
 
-FROM mrbobbytables/ubuntu-base:1.0.0
+FROM mrbobbytables/ubuntu-base:1.0.2
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
-ENV VERSION_BAMBOO=v0.2.14               \
+ENV VERSION_BAMBOO=v0.2.15               \
     VERSION_HAPROXY=1.5.15-1ppa1~trusty  \
     VERSION_KEEPALIVED=1:1.2.7-1ubuntu1
 
@@ -56,12 +56,15 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && rm -r /var/lib/gems                  \
  && rm -r /opt/go                        \
  && rm /etc/rsyslog.d/50-default.conf    \
+ && rm /etc/logrotate.d/*                \
  && rm -r /tmp/*
 
 COPY ./skel /
 
-RUN chmod +x init.sh    \
- && touch /var/run/haproxy.stat     \
+RUN chmod +x init.sh              \
+ && chmod 640 /etc/logrotate.d/*  \
+ && touch /var/run/haproxy.stat   \
+ && mkdir -p /var/log/bamboo      \ 
  && chown -R logstash-forwarder:logstash-forwarder /opt/logstash-forwarder
 
 
