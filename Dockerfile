@@ -1,6 +1,6 @@
 ################################################################################
-# bamboo:1.0.2
-# Date: 11/23/2015
+# bamboo:1.0.3
+# Date: 12/24/2015
 # Bamboo Version: v0.2.15
 # HAproxy Version: 1.5.15-1ppa~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
@@ -10,7 +10,7 @@
 # keepalived for additional high availability.
 ################################################################################
 
-FROM mrbobbytables/ubuntu-base:1.0.2
+FROM mrbobbytables/ubuntu-base:1.0.3
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 

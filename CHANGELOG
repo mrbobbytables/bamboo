@@ -1,3 +1,7 @@
+2015-12-24 - 1.0.3:
+ - Use Ubuntu base 1.0.3
+ - adjust for logrotate syntax change
+
 2015-11-23 - 1.0.2:
  - Bump Bamboo release to 0.2.15
  - Add logrotate support
