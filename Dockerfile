@@ -1,12 +1,12 @@
 ################################################################################
-# bamboo:1.0.3
-# Date: 12/24/2015
+# bamboo:1.1.0
+# Date: 12/26/2015
 # Bamboo Version: v0.2.15
-# HAproxy Version: 1.5.15-1ppa~trusty
+# HAproxy Version: 1.6.2-2ppa2~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
 #
 # Description:
-# Bamboo container for use with Marathon, packaged with haproxy 1.5.14 and 
+# Bamboo container for use with Marathon, packaged with haproxy and 
 # keepalived for additional high availability.
 ################################################################################
 
@@ -15,12 +15,12 @@ MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
 ENV VERSION_BAMBOO=v0.2.15               \
-    VERSION_HAPROXY=1.5.15-1ppa1~trusty  \
+    VERSION_HAPROXY=1.6.2-2ppa2~trusty   \
     VERSION_KEEPALIVED=1:1.2.7-1ubuntu1
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD                                                         \
- && echo "deb http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu trusty main" >> /etc/apt/sources.list.d/haproxy.list        \
- && echo "deb-src http://ppa.launchpad.net/vbernat/haproxy-1.5/ubuntu trusty main" >> /etc/apt/sources.list.d/haproxy.list    \
+ && echo "deb http://ppa.launchpad.net/vbernat/haproxy-1.6/ubuntu trusty main" >> /etc/apt/sources.list.d/haproxy.list        \
+ && echo "deb-src http://ppa.launchpad.net/vbernat/haproxy-1.6/ubuntu trusty main" >> /etc/apt/sources.list.d/haproxy.list    \
  && export GOROOT=/opt/go           \
  && export GOPATH=/opt/go/gopkg     \
  && export PATH=$PATH:/opt/go/bin   \
