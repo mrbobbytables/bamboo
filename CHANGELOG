@@ -1,3 +1,6 @@
+2016-01-04 - 1.1.1:
+ - Bump to HAproxy 1.6.3-1ppa1~trusty
+
 2015-12-26 - 1.1.0:
  - Switch to using HAproxy 1.6.x (adds lua support)
 
