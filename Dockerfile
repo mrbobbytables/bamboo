@@ -55,8 +55,6 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && apt-get -y autoremove                \
  && rm -r /var/lib/gems                  \
  && rm -r /opt/go                        \
- && rm /etc/rsyslog.d/50-default.conf    \
- && rm /etc/logrotate.d/*                \
  && rm -r /tmp/*
 
 COPY ./skel /
