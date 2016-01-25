@@ -45,23 +45,27 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && ./builder/build.sh                                                               \         
  && dpkg -i $GOPATH/src/github.com/QubitProducts/bamboo/output/bamboo*.deb           \
  && gem list --no-version | xargs gem uninstall -ax                                  \
- && apt-get purge -y                     \
-     wget                                \
-     make                                \
-     ruby                                \
-     ruby-dev                            \
-     git                                 \
- && apt-get -y clean                     \
- && apt-get -y autoremove                \
- && rm -r /var/lib/gems                  \
- && rm -r /opt/go                        \
- && rm -r /tmp/*
+ && apt-get purge -y  \
+     wget             \
+     make             \
+     ruby             \
+     ruby-dev         \
+     git              \
+ && apt-get -y clean             \
+ && apt-get -y autoremove        \
+ && rm -r /var/lib/gems          \
+ && rm -r /opt/go                \
+ && rm /etc/rsyslog.d/*.conf     \
+ && rm /etc/logrotate.d/haproxy  \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./skel /
 
 RUN chmod +x init.sh              \
+ && chmod 640 /etc/rsyslog.d/*    \
  && chmod 640 /etc/logrotate.d/*  \
  && touch /var/run/haproxy.stat   \
+ && mkdir -p /var/log/haproxy     \
  && mkdir -p /var/log/bamboo      \ 
  && chown -R logstash-forwarder:logstash-forwarder /opt/logstash-forwarder
 
