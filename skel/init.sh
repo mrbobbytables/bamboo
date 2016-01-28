@@ -24,7 +24,6 @@ init_vars() {
   export SERVICE_CONSUL_TEMPLATE=${SERVICE_CONSUL_TEMPLATE:-disabled}  
   export KEEPALIVED_AUTOCONF=${KEEPALIVED_AUTOCONF:-enabled}
   export SERVICE_KEEPALIVED_CONF=${SERVICE_KEEPALIVED_CONF:-/etc/keepalived/keepalived.conf}
-  export SERVICE_LOGROTATE_CONF=${SERVICE_LOGROTATE_CONF:-/etc/logrotate.conf}
   export SERVICE_LOGSTASH_FORWARDER_CONF=${SERVICE_LOGSTASH_FORWARDER_CONF:-/opt/logstash-forwarder/bamboo.conf}
   export SERVICE_REDPILL_MONITOR=${SERVICE_REDPILL_MONITOR:-"bamboo,haproxy,keepalived"}
   export SERVICE_RSYSLOG=${SERVICE_RSYSLOG:-enabled}
