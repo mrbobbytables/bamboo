@@ -20,10 +20,10 @@ init_vars() {
   export BAMBOO_LOG_FILE=${BAMBOO_LOG_FILE:-/var/log/bamboo/bamboo.log}
   export BAMBOO_CONF=${BAMBOO_CONF:-/opt/bamboo/config/production.json}
   export HAPROXY_OUTPUT_PATH=${HAPROXY_OUTPUT_PATH:-/etc/haproxy/haproxy.cfg}
-  
+
+  export SERVICE_CONSUL_TEMPLATE=${SERVICE_CONSUL_TEMPLATE:-disabled}  
   export KEEPALIVED_AUTOCONF=${KEEPALIVED_AUTOCONF:-enabled}
   export SERVICE_KEEPALIVED_CONF=${SERVICE_KEEPALIVED_CONF:-/etc/keepalived/keepalived.conf}
-  export SERVICE_LOGROTATE_CONF=${SERVICE_LOGROTATE_CONF:-/etc/logrotate.conf}
   export SERVICE_LOGSTASH_FORWARDER_CONF=${SERVICE_LOGSTASH_FORWARDER_CONF:-/opt/logstash-forwarder/bamboo.conf}
   export SERVICE_REDPILL_MONITOR=${SERVICE_REDPILL_MONITOR:-"bamboo,haproxy,keepalived"}
   export SERVICE_RSYSLOG=${SERVICE_RSYSLOG:-enabled}
@@ -47,6 +47,9 @@ init_vars() {
       export SERVICE_REDPILL=${SERVICE_REDPILL:-disabled}
       export SERVICE_HAPROXY_CMD=${SERVICE_HAPROXY_CMD:-"/usr/sbin/haproxy -db -f $HAPROXY_OUTPUT_PATH"}
       export SERVICE_KEEPALIVED_CMD=${SERVICE_KEEPALIVED_CMD:-"/usr/sbin/keepalived -n -D -l -f $SERVICE_KEEPALIVED_CONF"}
+      if [[ "$SERVICE_CONSUL_TEMPLATE" == "enabled" ]]; then
+        export CONSUL_TEMPLATE_LOG_LEVEL=${CONSUL_TEMPLATE_LOG_LEVEL:-debug}
+      fi
       sed -e "s|^stdout_logfile=.*|stdout_logfile=/dev/fd/1|g" -i /etc/supervisor/conf.d/haproxy.conf
       sed -e "s|^stderr_logfile=.*|stderr_logfile=/dev/fd/2|g" -i /etc/supervisor/conf.d/haproxy.conf
       ;;
@@ -68,6 +71,7 @@ main() {
   echo "[$(date)][App-Name] $APP_NAME"
   echo "[$(date)][Environment] $ENVIRONMENT"
 
+  __config_service_consul_template
   __config_service_keepalived
   __config_service_logrotate
   __config_service_logstash_forwarder

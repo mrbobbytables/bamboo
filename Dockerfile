@@ -1,6 +1,6 @@
 ################################################################################
-# bamboo:1.1.1
-# Date: 1/4/2016
+# bamboo:1.2.0
+# Date: 1/22/2016
 # Bamboo Version: v0.2.15
 # HAproxy Version: 1.6.3-1ppa1~trusty
 # Keepalived Version: 1:1.2.7-1ubuntu1
@@ -10,7 +10,7 @@
 # keepalived for additional high availability.
 ################################################################################
 
-FROM mrbobbytables/ubuntu-base:1.0.3
+FROM mrbobbytables/ubuntu-base:1.1.0
 MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
@@ -45,25 +45,27 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && ./builder/build.sh                                                               \         
  && dpkg -i $GOPATH/src/github.com/QubitProducts/bamboo/output/bamboo*.deb           \
  && gem list --no-version | xargs gem uninstall -ax                                  \
- && apt-get purge -y                     \
-     wget                                \
-     make                                \
-     ruby                                \
-     ruby-dev                            \
-     git                                 \
- && apt-get -y clean                     \
- && apt-get -y autoremove                \
- && rm -r /var/lib/gems                  \
- && rm -r /opt/go                        \
- && rm /etc/rsyslog.d/50-default.conf    \
- && rm /etc/logrotate.d/*                \
- && rm -r /tmp/*
+ && apt-get purge -y  \
+     wget             \
+     make             \
+     ruby             \
+     ruby-dev         \
+     git              \
+ && apt-get -y clean             \
+ && apt-get -y autoremove        \
+ && rm -r /var/lib/gems          \
+ && rm -r /opt/go                \
+ && rm /etc/rsyslog.d/*.conf     \
+ && rm /etc/logrotate.d/haproxy  \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./skel /
 
 RUN chmod +x init.sh              \
+ && chmod 640 /etc/rsyslog.d/*    \
  && chmod 640 /etc/logrotate.d/*  \
  && touch /var/run/haproxy.stat   \
+ && mkdir -p /var/log/haproxy     \
  && mkdir -p /var/log/bamboo      \ 
  && chown -R logstash-forwarder:logstash-forwarder /opt/logstash-forwarder
 

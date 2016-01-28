@@ -5,7 +5,7 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 
 ##### Version Information:
 
-* **Container Release:** 1.1.1
+* **Container Release:** 1.2.0
 * **Bamboo:** v0.2.15
 * **HAproxy:** 1.6.3-1ppa1~trusty
 * **Keepalived:** 1:1.2.7-1ubuntu1
@@ -14,11 +14,11 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
 * **[Bamboo](#bamboo)** - A service-discovery and routing daemon that subscribes to Marathon events.
 * **[HApoxy](#haproxy)** - The well known and high performance tcp/http load balancer.
 * **[Keepalived](#keepalived)** - A well known and frequently used framework that provides load-balancing and fault tolerance via VRRP (Virtual Router Redundancy Protocol).
-* **[Rsyslog](#rsyslog)** - A system logging daemon. Bundled to support logging for HAproxy and Keepalived.
+* **[Consul-Template](#consul-template)** - An application that can populate configs from a consul service.
 * **[Logrotate](#logrotate)** - A script and application that aid in pruning log files.
 * **[Logstash-Forwarder](#logstash-forwarder)** - A lightweight log collector and shipper for use with [Logstash](https://www.elastic.co/products/logstash).
 * **[Redpill](#redpill)** - A bash script and healthcheck for supervisord managed services. It is capable of running cleanup scripts that should be executed upon container termination.
-
+* **[Rsyslog](#rsyslog)** - A system logging daemon.
 
 
 ---
@@ -35,10 +35,11 @@ Additional High availability is provided by Keepalived; a well-proven, battle-te
  * [Bamboo](#bamboo)
  * [HAproxy](#haproxy)
  * [Keepalived](#keepalived)
- * [Rsyslog](#rsyslog)
+ * [Consul-Template](#consul-template)
  * [Logrotate](#logrotate)
  * [Logstash-Forwarder](#logstash-forwarder)
  * [Redpill](#redpill)
+ * [Rsyslog](#rsyslog)
 * [Troubleshooting](#troubleshooting)
 
 ---
@@ -335,8 +336,6 @@ bamboo
 ```
 
 
-* **Note:** The example assumes a v1.6+ version of docker or a v2 version of the docker registry. For information on using an older version or connecting to a v1 registry, please see the [private registry](https://mesosphere.github.io/marathon/docs/native-docker-private-registry.html) section of the Marathon documentation.
-
 ##### Example ENVIRONMENT_INIT script
 ```
 #!/bin/bash
@@ -395,12 +394,12 @@ Below is the minimum list of variables to be aware of when deploying the Bamboo 
 | `SERVICE_KEEPALIVED`              |                                       |
 | `SERVICE_KEEPALIVED_CONF`         | `/etc/keepalived/keepalived.conf`     |
 | `KEEPALIVED_AUTOCONF`             | `enabled`                             |
+| `SERVICE_CONSUL_TEMPLATE`         | `disabled`                            |
 | `SERVICE_LOGSTASH_FORWARDER`      |                                       |
 | `SERVICE_LOGSTASH_FORWARDER_CONF` | `/opt/logstash-forwarder/bamboo.conf` |
 | `SERVICE_REDPILL`                 |                                       |
 | `SERVICE_REPILL_MONITOR`          | `bamboo,haproxy,keepalived`           |
 | `SERVICE_RSYSLOG`                 | `enabled`                             |
-| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                   |
 
 ##### Description
 
@@ -424,6 +423,8 @@ Below is the minimum list of variables to be aware of when deploying the Bamboo 
 
 * `KEEPALIVED_AUTOCONF` - Enables or disables Keepalived autoconfiguration. (**Options:** `enabled` or `disabled`)
 
+* `SERVICE_CONSUL_TEMPLATE` - Enables or disables the consul-template service. (**Options:** `enabled` or `disabled`)
+
 * `SERVICE_LOGSTASH_FORWARDER` - Enables or disables the Logstash-Forwarder service. Set automatically depending on the `ENVIRONMENT`. See the Environment section below.  (**Options:** `enabled` or `disabled`)
 
 * `SERVICE_LOGSTASH_FORWARDER_CONF` - The path to the logstash-forwarder configuration.
@@ -434,7 +435,6 @@ Below is the minimum list of variables to be aware of when deploying the Bamboo 
 
 * `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
 
-* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
 
 ---
 
@@ -470,6 +470,9 @@ Below is the minimum list of variables to be aware of when deploying the Bamboo 
 | `SERVICE_REDPILL`            | `disabled`                                                  |
 | `SERVICE_HAPROXY_CMD`        | `/usr/sbin/haproxy -db -f $HAPROXY_OUTPUT_PATH`             |
 | `SERVICE_KEEPALIVED_CMD`     | `/usr/sbin/keepalived -n -D -l -f $SERVICE_KEEPALIVED_CONF` |
+| `CONSUL_TEMPLATE_LOG_LEVEL`  | `debug`*                                                    |
+
+\* Only set if `SERVICE_CONSUL_TEMPLATE` is set to `enabled`.
 
 
 ---
@@ -635,26 +638,21 @@ vrrp_instance MAIN {
 ---
 
 
-### Rsyslog
-Rsyslog is a high performance log processing daemon. 
+### Consul-Template
 
-Both HAproxy and Keepalived's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
+Provides initial configuration of consul-template. Variables prefixed with `CONSUL_TEMPLATE_` will automatically be passed to the consul-template service at runtime, e.g. `CONSUL_TEMPLATE_SSL_CA_CERT=/etc/consul/certs/ca.crt` becomes `-ssl-ca-cert="/etc/consul/certs/ca.crt"`. If managing the application configuration is handled via file configs, no other variables must be passed at runtime.
+
+#### Consul-Template Environment Variables
 
 ##### Defaults
 
-| **Variable**                      | **Default**                                      |
-|-----------------------------------|--------------------------------------------------|
-| `SERVICE_RSYSLOG`                 | `enabled`                                        |
-| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                              |
-| `SERVICE_RSYSLOG_CMD`             | `/usr/sbin/rsyslogd -n -f $SERVICE_RSYSLOG_CONF` |
+| **Variable**                  | **Default**                           |
+|-------------------------------|---------------------------------------|
+| `CONSUL_TEMPLATE_CONFIG`      | `/etc/consul/template/conf.d`         |
+| `CONSUL_TEMPLATE_SYSLOG`      | `true`                                |
+| `SERVICE_CONSUL_TEMPLATE`     |                                       |
+| `SERVICE_CONSUL_TEMPLATE_CMD` | `consul-template <CONSUL_TEMPLATE_*>` |
 
-##### Description
-
-* `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
-
-* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
-
-* `SERVICE_RSYSLOG_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
 
 ---
 
@@ -781,6 +779,32 @@ Redpill - Supervisor status monitor. Terminates the supervisor process if any sp
 -i | --interval   Optional interval at which the service check is performed in seconds. (Default: 30)
 -s | --service    A comma delimited list of the supervisor service names that should be monitored.
 ```
+
+
+---
+
+
+### Rsyslog
+Rsyslog is a high performance log processing daemon.
+
+Both HAproxy and Keepalived's logging capability are dependant on the rsyslog service. Rsyslog is enabled in all configurations by default. For any modifications to the config, it is best to edit the rsyslog configs directly (`/etc/rsyslog.conf` and `/etc/rsyslog.d/*`).
+
+##### Defaults
+
+| **Variable**                      | **Default**                                      |
+|-----------------------------------|--------------------------------------------------|
+| `SERVICE_RSYSLOG`                 | `enabled`                                        |
+| `SERVICE_RSYSLOG_CONF`            | `/etc/rsyslog.conf`                              |
+| `SERVICE_RSYSLOG_CMD`             | `/usr/sbin/rsyslogd -n -f $SERVICE_RSYSLOG_CONF` |
+
+##### Description
+
+* `SERVICE_RSYSLOG` - Enables or disables the rsyslog service. This will automatically be set depending on what other services are enabled. (**Options:** `enabled` or `disabled`)
+
+* `SERVICE_RSYSLOG_CONF` - The path to the rsyslog configuration file.
+
+* `SERVICE_RSYSLOG_CMD` -  The command that is passed to supervisor. If overriding, must be an escaped python string expression. Please see the [Supervisord Command Documentation](http://supervisord.org/configuration.html#program-x-section-settings) for further information.
+
 
 ---
 ---
