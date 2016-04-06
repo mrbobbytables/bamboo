@@ -1,3 +1,6 @@
+2016-04-06 - 1.2.1:
+ - Switched to ignoring patch releases of HAproxy. The PPA only maintains the most current one.
+
 2016-01-22 - 1.2.0:
  - Use new Ubuntu base image.
  - Consul template and envconsul support added

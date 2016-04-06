@@ -1,8 +1,8 @@
 ################################################################################
-# bamboo:1.2.0
-# Date: 1/22/2016
+# bamboo:1.2.1
+# Date: 4/6/2016
 # Bamboo Version: v0.2.15
-# HAproxy Version: 1.6.3-1ppa1~trusty
+# HAproxy Version: 1.6.*
 # Keepalived Version: 1:1.2.7-1ubuntu1
 #
 # Description:
@@ -15,7 +15,7 @@ MAINTAINER Bob Killen / killen.bob@gmail.com / @mrbobbytables
 
 
 ENV VERSION_BAMBOO=v0.2.15               \
-    VERSION_HAPROXY=1.6.3-1ppa1~trusty   \
+    VERSION_HAPROXY='1.6.*'              \
     VERSION_KEEPALIVED=1:1.2.7-1ubuntu1
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD                                                         \
@@ -27,7 +27,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1C61B9CD           
  && export USER=root                \
  && apt-get update                  \
  && apt-get -y install              \
-    haproxy=$VERSION_HAPROXY        \
+    haproxy=$VERSION_HAPROXY       \
     git                             \
     iptables                        \
     keepalived=$VERSION_KEEPALIVED  \
